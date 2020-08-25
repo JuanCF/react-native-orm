@@ -28,21 +28,21 @@ export const toSqlField = (field) => {
                 break;
             }
 
-			case 'float': {
+            case 'float': {
                 fieldFormat += 'REAL' + (index == fieldSplit.length - 1 ? '' : ' ');
 
                 break;
             }
 
             case 'boolean': { /* No break */ }
-                
+
             case 'int': {
-                fieldFormat += 'INTEGER' + (index == fieldSplit.length - 1 ? '' : ' ');                
+                fieldFormat += 'INTEGER' + (index == fieldSplit.length - 1 ? '' : ' ');
 
                 break;
             }
 
-            default: {}
+            default: { }
         }
     });
 
