@@ -28,6 +28,12 @@ export const toSqlField = (field) => {
                 break;
             }
 
+			case 'float': {
+                fieldFormat += 'REAL' + (index == fieldSplit.length - 1 ? '' : ' ');
+
+                break;
+            }
+
             case 'boolean': { /* No break */ }
                 
             case 'int': {
