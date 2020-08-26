@@ -3,10 +3,10 @@ import { Query } from "./Query";
 import { serialize } from "./utils/serializer";
 import { formatTimestamp } from "./utils/timestamp";
 
-let _assignableFields   = new WeakMap();
-let _selectedField      = new WeakMap();
-let _isEdit             = new WeakMap();
-let _keyValue           = new WeakMap();
+let _assignableFields = new WeakMap();
+let _selectedField = new WeakMap();
+let _isEdit = new WeakMap();
+let _keyValue = new WeakMap();
 
 export class Model extends Query {
     constructor() {
@@ -59,7 +59,7 @@ export class Model extends Query {
         const existingField = (_assignableFields.get(this)).findIndex(value => value === field);
 
         if (existingField === -1) {
-            throw new Error(`Field named "${ field }" does not exist or is not assignable.`);
+            throw new Error(`Field named "${field}" does not exist or is not assignable.`);
         }
 
         _selectedField.set(this, field);
@@ -74,7 +74,7 @@ export class Model extends Query {
      */
     setFieldValue(value) {
         let newKeyValue = _keyValue.get(this);
-        
+
         newKeyValue[_selectedField.get(this)] = value;
 
         _keyValue.set(this, newKeyValue);
@@ -86,7 +86,11 @@ export class Model extends Query {
      */
     all() {
         return new Promise(async (resolve, reject) => {
-            return resolve(await this.whereNull('deleted_at').get());
+            try {
+                return resolve(await this.whereNull('deleted_at').get());
+            } catch (error) {
+                return reject(error);
+            }
         });
     }
 
@@ -100,38 +104,42 @@ export class Model extends Query {
      */
     find(value, column = 'uuid') {
         return new Promise(async (resolve, reject) => {
-            const queryRes = await this.where(column, '=', value)
-                .andWhereNull('deleted_at')
-                .get();
+            try {
+                const queryRes = await this.where(column, '=', value)
+                    .andWhereNull('deleted_at')
+                    .get();
 
-            if (
-                Array.isArray(queryRes.data)
-                && queryRes.data.length > 0
-            ) {
-                let newKeyValue = _keyValue.get(this);
+                if (
+                    Array.isArray(queryRes.data)
+                    && queryRes.data.length > 0
+                ) {
+                    let newKeyValue = _keyValue.get(this);
 
-                // Map retrieved data
-                Object.keys(queryRes.data[0]).forEach(key => {
-                    // Set key-value (Model)
-                    newKeyValue[key] = queryRes.data[0][key];
-    
-                    // Set key-value (Parent, Query)
-                    this.setKeyValue(key, queryRes.data[0][key]);
+                    // Map retrieved data
+                    Object.keys(queryRes.data[0]).forEach(key => {
+                        // Set key-value (Model)
+                        newKeyValue[key] = queryRes.data[0][key];
 
-                    _isEdit.set(this, true);
+                        // Set key-value (Parent, Query)
+                        this.setKeyValue(key, queryRes.data[0][key]);
+
+                        _isEdit.set(this, true);
+                    });
+
+                    _keyValue.set(this, newKeyValue);
+
+                    // Reset value
+                    newKeyValue = {};
+                }
+
+                return resolve({
+                    statusCode: queryRes.statusCode,
+                    message: queryRes.message,
+                    data: queryRes.data[0] || {}
                 });
-
-                _keyValue.set(this, newKeyValue);
-
-                // Reset value
-                newKeyValue = {};
+            } catch (error) {
+                return reject(error);
             }
-
-            return resolve({
-                statusCode: queryRes.statusCode,
-                message: queryRes.message,
-                data: queryRes.data[0] || {}
-            });
         });
     }
 
@@ -146,37 +154,41 @@ export class Model extends Query {
      */
     findWithTrashed(value, column = 'uuid') {
         return new Promise(async (resolve, reject) => {
-            const queryRes = await this.where(column, '=', value)
-                .get();
+            try {
+                const queryRes = await this.where(column, '=', value)
+                    .get();
 
-            if (
-                Array.isArray(queryRes.data)
-                && queryRes.data.length > 0
-            ) {
-                let newKeyValue = _keyValue.get(this);
+                if (
+                    Array.isArray(queryRes.data)
+                    && queryRes.data.length > 0
+                ) {
+                    let newKeyValue = _keyValue.get(this);
 
-                // Map retrieved data
-                Object.keys(queryRes.data[0]).forEach(key => {
-                    // Set key-value (Model)
-                    newKeyValue[key] = queryRes.data[0][key];
-    
-                    // Set key-value (Parent, Query)
-                    this.setKeyValue(key, queryRes.data[0][key]);
+                    // Map retrieved data
+                    Object.keys(queryRes.data[0]).forEach(key => {
+                        // Set key-value (Model)
+                        newKeyValue[key] = queryRes.data[0][key];
 
-                    _isEdit.set(this, true);
+                        // Set key-value (Parent, Query)
+                        this.setKeyValue(key, queryRes.data[0][key]);
+
+                        _isEdit.set(this, true);
+                    });
+
+                    _keyValue.set(this, newKeyValue);
+
+                    // Reset value
+                    newKeyValue = {};
+                }
+
+                return resolve({
+                    statusCode: queryRes.statusCode,
+                    message: queryRes.message,
+                    data: queryRes.data[0] || {}
                 });
-
-                _keyValue.set(this, newKeyValue);
-
-                // Reset value
-                newKeyValue = {};
+            } catch (error) {
+                return reject(error);
             }
-
-            return resolve({
-                statusCode: queryRes.statusCode,
-                message: queryRes.message,
-                data: queryRes.data[0] || {}
-            });
         });
     }
 
@@ -187,38 +199,42 @@ export class Model extends Query {
      */
     first() {
         return new Promise(async (resolve, reject) => {
-            const queryRes = await this.whereNull('deleted_at').limit(1).get();
+            try {
+                const queryRes = await this.whereNull('deleted_at').limit(1).get();
 
-            // TODO
-            // Refactor Later...
-            if (
-                Array.isArray(queryRes.data)
-                && queryRes.data.length > 0
-            ) {
-                let newKeyValue = _keyValue.get(this);
+                // TODO
+                // Refactor Later...
+                if (
+                    Array.isArray(queryRes.data)
+                    && queryRes.data.length > 0
+                ) {
+                    let newKeyValue = _keyValue.get(this);
 
-                // Map retrieved data
-                Object.keys(queryRes.data[0]).forEach(key => {
-                    // Set key-value (Model)
-                    newKeyValue[key] = queryRes.data[0][key];
-    
-                    // Set key-value (Parent, Query)
-                    this.setKeyValue(key, queryRes.data[0][key]);
+                    // Map retrieved data
+                    Object.keys(queryRes.data[0]).forEach(key => {
+                        // Set key-value (Model)
+                        newKeyValue[key] = queryRes.data[0][key];
 
-                    _isEdit.set(this, true);
+                        // Set key-value (Parent, Query)
+                        this.setKeyValue(key, queryRes.data[0][key]);
+
+                        _isEdit.set(this, true);
+                    });
+
+                    _keyValue.set(this, newKeyValue);
+
+                    // Reset value
+                    newKeyValue = {};
+                }
+
+                return resolve({
+                    statusCode: queryRes.statusCode,
+                    message: queryRes.message,
+                    data: queryRes.data[0] || {}
                 });
-
-                _keyValue.set(this, newKeyValue);
-
-                // Reset value
-                newKeyValue = {};
+            } catch (error) {
+                return reject(error);
             }
-
-            return resolve({
-                statusCode: queryRes.statusCode,
-                message: queryRes.message,
-                data: queryRes.data[0] || {}
-            });
         });
     }
 
@@ -229,21 +245,25 @@ export class Model extends Query {
      */
     save() {
         return new Promise(async (resolve, reject) => {
-            const isEdit = _isEdit.get(this);
+            try {
+                const isEdit = _isEdit.get(this);
 
-            // Reset value
-            _isEdit.set(this, false);
+                // Reset value
+                _isEdit.set(this, false);
 
-            return resolve(
-                !isEdit
-                    ? (
-                        await this.insert([
-                            (serialize([ _keyValue.get(this) ]))[0]
-                        ])
-                    ) : (
-                        await this.update(serialize([ _keyValue.get(this) ])[0])
-                    )
-            );
+                return resolve(
+                    !isEdit
+                        ? (
+                            await this.insert([
+                                (serialize([_keyValue.get(this)]))[0]
+                            ])
+                        ) : (
+                            await this.update(serialize([_keyValue.get(this)])[0])
+                        )
+                );
+            } catch (error) {
+                return reject(error);
+            }
         });
     }
 
@@ -255,20 +275,24 @@ export class Model extends Query {
      */
     remove(softDelete = false) {
         return new Promise(async (resolve, reject) => {
-            // Reset values
-            _isEdit.set(this, false);
+            try {
+                // Reset values
+                _isEdit.set(this, false);
 
-            if (softDelete) {
-                let newKeyValue = _keyValue.get(this);
+                if (softDelete) {
+                    let newKeyValue = _keyValue.get(this);
 
-                newKeyValue['deleted_at'] = formatTimestamp(new Date());
+                    newKeyValue['deleted_at'] = formatTimestamp(new Date());
 
-                _keyValue.set(this, newKeyValue);
+                    _keyValue.set(this, newKeyValue);
 
-                return resolve(await this.update(serialize([ _keyValue.get(this) ])[0]));
+                    return resolve(await this.update(serialize([_keyValue.get(this)])[0]));
+                }
+
+                return resolve(await this.delete());
+            } catch (error) {
+                return reject(error);
             }
-
-            return resolve(await this.delete());
         });
     }
 
@@ -280,7 +304,11 @@ export class Model extends Query {
      */
     create(values = []) {
         return new Promise(async (resolve, reject) => {
-            return resolve(await this.insert(serialize(values)));
+            try {
+                return resolve(await this.insert(serialize(values)));
+            } catch (error) {
+                return reject(error);
+            }
         });
     }
 }
