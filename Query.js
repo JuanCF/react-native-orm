@@ -8,24 +8,24 @@ import { Subquery } from './Subquery';
 SQLite.DEBUG(false);
 SQLite.enablePromise(true);
 
-let _databaseInstance   = null;
+let _databaseInstance = null;
 
-let _tableName          = new WeakMap();
-let _tableFields        = new WeakMap();
-let _whereClause        = new WeakMap();
-let _whereClauseValues  = new WeakMap();    
-let _limitNum           = new WeakMap();
-let _keyValue           = new WeakMap();
-let _subqueryInstance   = new WeakMap();
-let _orderByClause      = new WeakMap();
-let _distinctClause     = new WeakMap();
+let _tableName = new WeakMap();
+let _tableFields = new WeakMap();
+let _whereClause = new WeakMap();
+let _whereClauseValues = new WeakMap();
+let _limitNum = new WeakMap();
+let _keyValue = new WeakMap();
+let _subqueryInstance = new WeakMap();
+let _orderByClause = new WeakMap();
+let _distinctClause = new WeakMap();
 
 export class Query {
     constructor(props = {}) {
         _tableName.set(this, '');
         _tableFields.set(this, {});
         _whereClause.set(this, '');
-        _whereClauseValues.set(this, []);    
+        _whereClauseValues.set(this, []);
         _limitNum.set(this, 0);
         _keyValue.set(this, {});
         _subqueryInstance.set(this, new Subquery());
@@ -120,7 +120,7 @@ export class Query {
         if (column instanceof Function) {
             const subquery = column(_subqueryInstance.get(this));
 
-            _whereClause.set(this, `${ _whereClause.get(this) } ${ subquery.getWhereClause() }`);
+            _whereClause.set(this, `${_whereClause.get(this)} ${subquery.getWhereClause()}`);
 
             _whereClauseValues.set(
                 this,
@@ -134,9 +134,9 @@ export class Query {
         }
 
         if (_whereClause.get(this)) {
-            _whereClause.set(this, `${ _whereClause.get(this) } AND ${ column } ${ operator } ?`);
+            _whereClause.set(this, `${_whereClause.get(this)} AND ${column} ${operator} ?`);
         } else {
-            _whereClause.set(this, `WHERE ${ column } ${ operator } ?`);
+            _whereClause.set(this, `WHERE ${column} ${operator} ?`);
         }
 
         _whereClauseValues.set(
@@ -158,7 +158,7 @@ export class Query {
      * @param {*} value
      */
     andWhere(column, operator, value) {
-        _whereClause.set(this, `${ _whereClause.get(this) } AND ${ column } ${ operator } ?`);
+        _whereClause.set(this, `${_whereClause.get(this)} AND ${column} ${operator} ?`);
         _whereClauseValues.set(
             this,
             [
@@ -181,7 +181,7 @@ export class Query {
         if (column instanceof Function) {
             const subquery = column(_subqueryInstance.get(this));
 
-            _whereClause.set(this, `${ _whereClause.get(this) } ${ subquery.getWhereClause('OR') }`);
+            _whereClause.set(this, `${_whereClause.get(this)} ${subquery.getWhereClause('OR')}`);
 
             _whereClauseValues.set(
                 this,
@@ -194,7 +194,7 @@ export class Query {
             return this;
         }
 
-        _whereClause.set(this, `${ _whereClause.get(this) } OR ${ column } ${ operator } ?`);
+        _whereClause.set(this, `${_whereClause.get(this)} OR ${column} ${operator} ?`);
         _whereClauseValues.set(
             this,
             [
@@ -212,7 +212,7 @@ export class Query {
      * @param {string} column
      */
     whereNull(column) {
-        _whereClause.set(this, `WHERE ${ column } IS NULL`);
+        _whereClause.set(this, `WHERE ${column} IS NULL`);
 
         return this;
     }
@@ -223,7 +223,7 @@ export class Query {
      * @param {string} column
      */
     andWhereNull(column) {
-        _whereClause.set(this, `${ _whereClause.get(this) } AND ${ column } IS NULL`);
+        _whereClause.set(this, `${_whereClause.get(this)} AND ${column} IS NULL`);
 
         return this;
     }
@@ -234,7 +234,7 @@ export class Query {
      * @param {string} column
      */
     orWhereNull(column) {
-        _whereClause.set(this, `${ _whereClause.get(this) } OR ${ column } IS NULL`);
+        _whereClause.set(this, `${_whereClause.get(this)} OR ${column} IS NULL`);
 
         return this;
     }
@@ -245,7 +245,7 @@ export class Query {
      * @param {string} column
      */
     whereNotNull(column) {
-        _whereClause.set(this, `WHERE ${ column } IS NOT NULL`);
+        _whereClause.set(this, `WHERE ${column} IS NOT NULL`);
 
         return this;
     }
@@ -256,7 +256,7 @@ export class Query {
      * @param {string} column
      */
     andWhereNotNull(column) {
-        _whereClause.set(this, `${ _whereClause.get(this) } AND ${ column } IS NOT NULL`);
+        _whereClause.set(this, `${_whereClause.get(this)} AND ${column} IS NOT NULL`);
 
         return this;
     }
@@ -267,7 +267,7 @@ export class Query {
      * @param {string} column
      */
     orWhereNotNull(column) {
-        _whereClause.set(this, `${ _whereClause.get(this) } OR ${ column } IS NOT NULL`);
+        _whereClause.set(this, `${_whereClause.get(this)} OR ${column} IS NOT NULL`);
 
         return this;
     }
@@ -279,7 +279,7 @@ export class Query {
      */
     limit(limitNum = 1) {
         _limitNum.set(this, limitNum);
-        
+
         return this;
     }
 
@@ -289,44 +289,53 @@ export class Query {
      */
     get() {
         return new Promise(async (resolve, reject) => {
-            const fields = Object.keys(_tableFields.get(this)).join(', ');
-            const limitQueryFormat = _limitNum.get(this) > 0
-                ? `LIMIT ${ _limitNum.get(this) }`
-                : '';
+            try {
+                const fields = Object.keys(_tableFields.get(this)).join(', ');
+                const limitQueryFormat = _limitNum.get(this) > 0
+                    ? `LIMIT ${_limitNum.get(this)}`
+                    : '';
 
-            const sqlQuery = await _databaseInstance.executeSql('SELECT '
-                + (_distinctClause.get(this) ? `${ _distinctClause.get(this) } ` : '')
-                + (_distinctClause.get(this) ? 'FROM ' : fields + ' FROM ') 
-                + _tableName.get(this) + ' '
-                + _whereClause.get(this) + ' '
-                + (_orderByClause.get(this) ? `${ _orderByClause.get(this) } ` : '')
-                + limitQueryFormat + ';', _whereClauseValues.get(this));
+                const sqlQuery = await _databaseInstance.executeSql('SELECT '
+                    + (_distinctClause.get(this) ? `${_distinctClause.get(this)} ` : '')
+                    + (_distinctClause.get(this) ? 'FROM ' : fields + ' FROM ')
+                    + _tableName.get(this) + ' '
+                    + _whereClause.get(this) + ' '
+                    + (_orderByClause.get(this) ? `${_orderByClause.get(this)} ` : '')
+                    + limitQueryFormat + ';', _whereClauseValues.get(this));
 
-            // Reset values
-            _whereClause.set(this, '');
-            _whereClauseValues.set(this, []);
+                // Reset values
+                _whereClause.set(this, '');
+                _whereClauseValues.set(this, []);
 
-            // Empty result
-            if (sqlQuery[0].rows.length === 0) {
+                // Empty result
+                if (sqlQuery[0].rows.length === 0) {
+                    return resolve({
+                        statusCode: 200,
+                        message: 'Successful query',
+                        data: []
+                    });
+                }
+
+                let rowsLength = sqlQuery[0].rows.length;
+                let data = [];
+
+                for (let i = 0; i < rowsLength; i++) {
+                    data.push(sqlQuery[0].rows.item(i));
+                }
+
                 return resolve({
                     statusCode: 200,
                     message: 'Successful query',
-                    data: []
+                    data: unserialize(data, _tableFields.get(this))
+                });
+            } catch (error) {
+                console.log('Query.get() error:', err);
+
+                return reject({
+                    statusCode: 500,
+                    message: 'An error occurred.'
                 });
             }
-
-            let rowsLength =  sqlQuery[0].rows.length;
-            let data = [];
-
-            for (let i = 0; i < rowsLength; i++) {
-                data.push(sqlQuery[0].rows.item(i));
-            }
-
-            return resolve({
-                statusCode: 200,
-                message: 'Successful query',
-                data: unserialize(data, _tableFields.get(this))
-            });
         });
     }
 
@@ -362,7 +371,7 @@ export class Query {
                             tx.executeSql(insertQueryFormat, values);
                         } catch (err) {
                             console.log('Data insertion error:', err);
-    
+
                             return reject({
                                 statusCode: 500,
                                 message: 'Data insertion error.'
@@ -400,10 +409,10 @@ export class Query {
                     let dataValues = [];
 
                     Object.keys(_tableFields.get(this)).forEach(key => {
-                        tableFieldUpdates.push(`${ key } = ?`);
-                        
+                        tableFieldUpdates.push(`${key} = ?`);
+
                         // Create/update default timestamp (updated_at only)
-                        dataValues.push(key === 'updated_at' ? formatTimestamp(new Date()) : value[key]);   
+                        dataValues.push(key === 'updated_at' ? formatTimestamp(new Date()) : value[key]);
                     });
 
                     const updateQueryFormat = 'UPDATE ' + _tableName.get(this)
@@ -411,7 +420,7 @@ export class Query {
                         + tableFieldUpdates.join(', ')
                         + ' WHERE uuid = ?;';
 
-                    await tx.executeSql(updateQueryFormat, dataValues.concat([ (_keyValue.get(this)).uuid ]));
+                    await tx.executeSql(updateQueryFormat, dataValues.concat([(_keyValue.get(this)).uuid]));
 
                     return resolve({
                         statusCode: 200,
@@ -424,7 +433,7 @@ export class Query {
 
                 return reject({
                     statusCode: 500,
-                    message:    'An error occurred.'
+                    message: 'An error occurred.'
                 });
             }
         });
@@ -443,7 +452,7 @@ export class Query {
                     const deleteQueryFormat = 'DELETE FROM ' + _tableName.get(this)
                         + ' WHERE uuid = ?';
 
-                    await tx.executeSql(deleteQueryFormat, [ (_keyValue.get(this)).uuid ]);
+                    await tx.executeSql(deleteQueryFormat, [(_keyValue.get(this)).uuid]);
 
                     return resolve({
                         statusCode: 200,
@@ -461,7 +470,7 @@ export class Query {
             }
         });
     }
-    
+
     /**
      * Counts number of records in a table
      * 
@@ -469,9 +478,9 @@ export class Query {
     count() {
         return new Promise(async (resolve, reject) => {
             try {
-                const selectCountQuery = `SELECT COUNT(*) AS count FROM ${ _tableName.get(this) }`;
+                const selectCountQuery = `SELECT COUNT(*) AS count FROM ${_tableName.get(this)}`;
                 const queryResult = await _databaseInstance.executeSql(selectCountQuery);
-                
+
                 return resolve({
                     statusCode: 200,
                     message: 'Query executed successfully.',
@@ -495,7 +504,7 @@ export class Query {
      * @param {String} sort 
      */
     orderBy(column, sort = 'asc') {
-        _orderByClause.set(this, `ORDER BY ${ column } ${ sort.toUpperCase() }`);
+        _orderByClause.set(this, `ORDER BY ${column} ${sort.toUpperCase()}`);
 
         return this;
     }
@@ -506,7 +515,7 @@ export class Query {
      * @param {String|Array} column 
      */
     distinct(column = []) {
-        _distinctClause.set(this, `DISTINCT ${ Array.isArray(column) ? column.join(', ') : column }`);
+        _distinctClause.set(this, `DISTINCT ${Array.isArray(column) ? column.join(', ') : column}`);
 
         return this;
     }
