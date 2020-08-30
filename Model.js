@@ -85,13 +85,14 @@ export class Model extends Query {
      * Same as Query.get()
      */
     all() {
-        return new Promise(async (resolve, reject) => {
+        return async () => {
             try {
-                return resolve(await this.whereNull('deleted_at').get());
+                const result = await this.whereNull('deleted_at').get();
+                return result;
             } catch (error) {
-                return reject(error);
+                return error;
             }
-        });
+        };
     }
 
     /**
@@ -103,7 +104,7 @@ export class Model extends Query {
      * @param {string} column
      */
     find(value, column = 'uuid') {
-        return new Promise(async (resolve, reject) => {
+        return async () => {
             try {
                 const queryRes = await this.where(column, '=', value)
                     .andWhereNull('deleted_at')
@@ -132,15 +133,15 @@ export class Model extends Query {
                     newKeyValue = {};
                 }
 
-                return resolve({
+                return {
                     statusCode: queryRes.statusCode,
                     message: queryRes.message,
                     data: queryRes.data[0] || {}
-                });
+                };
             } catch (error) {
-                return reject(error);
+                return error;
             }
-        });
+        };
     }
 
     /**
@@ -153,7 +154,7 @@ export class Model extends Query {
      * @param {string} column
      */
     findWithTrashed(value, column = 'uuid') {
-        return new Promise(async (resolve, reject) => {
+        return async () => {
             try {
                 const queryRes = await this.where(column, '=', value)
                     .get();
@@ -181,15 +182,15 @@ export class Model extends Query {
                     newKeyValue = {};
                 }
 
-                return resolve({
+                return {
                     statusCode: queryRes.statusCode,
                     message: queryRes.message,
                     data: queryRes.data[0] || {}
-                });
+                };
             } catch (error) {
-                return reject(error);
+                return error;
             }
-        });
+        };
     }
 
     /**
@@ -198,7 +199,7 @@ export class Model extends Query {
      * Query.limit() clause
      */
     first() {
-        return new Promise(async (resolve, reject) => {
+        return async () => {
             try {
                 const queryRes = await this.whereNull('deleted_at').limit(1).get();
 
@@ -227,15 +228,15 @@ export class Model extends Query {
                     newKeyValue = {};
                 }
 
-                return resolve({
+                return {
                     statusCode: queryRes.statusCode,
                     message: queryRes.message,
                     data: queryRes.data[0] || {}
-                });
+                };
             } catch (error) {
-                return reject(error);
+                return error;
             }
-        });
+        };
     }
 
     /**
@@ -274,10 +275,12 @@ export class Model extends Query {
      * @param {Boolean} softDelete
      */
     remove(softDelete = false) {
-        return new Promise(async (resolve, reject) => {
+        return async () => {
             try {
                 // Reset values
                 _isEdit.set(this, false);
+
+                let result;
 
                 if (softDelete) {
                     let newKeyValue = _keyValue.get(this);
@@ -286,14 +289,18 @@ export class Model extends Query {
 
                     _keyValue.set(this, newKeyValue);
 
-                    return resolve(await this.update(serialize([_keyValue.get(this)])[0]));
+                    result = await this.update(serialize([_keyValue.get(this)])[0]);
+
+                    return result;
                 }
 
-                return resolve(await this.delete());
+                result = await this.delete();
+
+                return result;
             } catch (error) {
-                return reject(error);
+                return error;
             }
-        });
+        };
     }
 
     /**
@@ -303,12 +310,13 @@ export class Model extends Query {
      * @param {Array} values
      */
     create(values = []) {
-        return new Promise(async (resolve, reject) => {
+        return async () => {
             try {
-                return resolve(await this.insert(serialize(values)));
+                const result = await this.insert(serialize(values));
+                return result;
             } catch (error) {
-                return reject(error);
+                return error;
             }
-        });
+        };
     }
 }

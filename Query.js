@@ -329,7 +329,7 @@ export class Query {
                     data: unserialize(data, _tableFields.get(this))
                 });
             } catch (error) {
-                console.log('Query.get() error:', err);
+                console.log('Query.get() error:', error);
 
                 return reject({
                     statusCode: 500,
