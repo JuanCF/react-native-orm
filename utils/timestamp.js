@@ -4,7 +4,8 @@
  * @param {Date} timestamp 
  */
 export const formatTimestamp = (timestamp) => {
-    return `${ timestamp.getFullYear().toString() }-${ dateToString(timestamp.getMonth() + 1) }-${ dateToString(timestamp.getDate()) } ${ dateToString(timestamp.getHours()) }:${ dateToString(timestamp.getMinutes()) }:${ dateToString(timestamp.getSeconds()) }`;
+    return timestamp.toISOString();
+    //return `${ timestamp.getFullYear().toString() }-${ dateToString(timestamp.getMonth() + 1) }-${ dateToString(timestamp.getDate()) } ${ dateToString(timestamp.getHours()) }:${ dateToString(timestamp.getMinutes()) }:${ dateToString(timestamp.getSeconds()) }`;
 }
 
 /**
