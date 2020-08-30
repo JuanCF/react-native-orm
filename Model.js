@@ -85,7 +85,7 @@ export class Model extends Query {
      * Same as Query.get()
      */
     all() {
-        return async () => {
+        const allFn =  async () => {
             try {
                 const result = await this.whereNull('deleted_at').get();
                 return result;
@@ -93,6 +93,7 @@ export class Model extends Query {
                 return error;
             }
         };
+        return allFn();
     }
 
     /**
@@ -104,7 +105,7 @@ export class Model extends Query {
      * @param {string} column
      */
     find(value, column = 'uuid') {
-        return async () => {
+        const findFn =  async () => {
             try {
                 const queryRes = await this.where(column, '=', value)
                     .andWhereNull('deleted_at')
@@ -142,6 +143,7 @@ export class Model extends Query {
                 return error;
             }
         };
+        return findFn();
     }
 
     /**
@@ -154,7 +156,7 @@ export class Model extends Query {
      * @param {string} column
      */
     findWithTrashed(value, column = 'uuid') {
-        return async () => {
+        const findWithTrashedFn =  async () => {
             try {
                 const queryRes = await this.where(column, '=', value)
                     .get();
@@ -191,6 +193,7 @@ export class Model extends Query {
                 return error;
             }
         };
+        return findWithTrashedFn();
     }
 
     /**
@@ -199,7 +202,7 @@ export class Model extends Query {
      * Query.limit() clause
      */
     first() {
-        return async () => {
+        const firstFn =  async () => {
             try {
                 const queryRes = await this.whereNull('deleted_at').limit(1).get();
 
@@ -237,6 +240,7 @@ export class Model extends Query {
                 return error;
             }
         };
+        return firstFn();
     }
 
     /**
@@ -275,7 +279,7 @@ export class Model extends Query {
      * @param {Boolean} softDelete
      */
     remove(softDelete = false) {
-        return async () => {
+        const removeFn = async () => {
             try {
                 // Reset values
                 _isEdit.set(this, false);
@@ -301,6 +305,7 @@ export class Model extends Query {
                 return error;
             }
         };
+        return removeFn();
     }
 
     /**
@@ -310,7 +315,7 @@ export class Model extends Query {
      * @param {Array} values
      */
     create(values = []) {
-        return async () => {
+        const createFn = async () => {
             try {
                 const result = await this.insert(serialize(values));
                 return result;
@@ -318,5 +323,6 @@ export class Model extends Query {
                 return error;
             }
         };
+        return createFn();
     }
 }
