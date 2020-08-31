@@ -405,8 +405,12 @@ export class Query {
         return new Promise(async (resolve, reject) => {
             try {
                 await _databaseInstance.transaction(async (tx) => {
+                    
                     let tableFieldUpdates = [];
                     let dataValues = [];
+
+                    let primaryKey = Object.keys(_tableFields.get(this)).find(key => _tableFields.get(this)[key].match('primary'));
+                    primaryKey = primaryKey ? primaryKey : 'uuid';
 
                     Object.keys(_tableFields.get(this)).forEach(key => {
                         tableFieldUpdates.push(`${key} = ?`);
@@ -418,9 +422,11 @@ export class Query {
                     const updateQueryFormat = 'UPDATE ' + _tableName.get(this)
                         + ' SET '
                         + tableFieldUpdates.join(', ')
-                        + ' WHERE uuid = ?;';
+                        + ' WHERE '
+                        +  primaryKey
+                        +' = ?;';
 
-                    await tx.executeSql(updateQueryFormat, dataValues.concat([(_keyValue.get(this)).uuid]));
+                    await tx.executeSql(updateQueryFormat, dataValues.concat([(_keyValue.get(this))[primaryKey]]));
 
                     return resolve({
                         statusCode: 200,
