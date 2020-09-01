@@ -455,10 +455,13 @@ export class Query {
         return new Promise(async (resolve, reject) => {
             try {
                 await _databaseInstance.transaction(async (tx) => {
-                    const deleteQueryFormat = 'DELETE FROM ' + _tableName.get(this)
-                        + ' WHERE uuid = ?';
 
-                    await tx.executeSql(deleteQueryFormat, [(_keyValue.get(this)).uuid]);
+                    let primaryKey = Object.keys(_tableFields.get(this)).find(key => _tableFields.get(this)[key].match('primary'));
+                    primaryKey = primaryKey ? primaryKey : 'uuid';
+
+                    const deleteQueryFormat = `DELETE FROM ${_tableName.get(this)} WHERE ${primaryKey} = ?`;
+
+                    await tx.executeSql(deleteQueryFormat, [(_keyValue.get(this))[primaryKey]]);
 
                     return resolve({
                         statusCode: 200,
