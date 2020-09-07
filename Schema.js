@@ -121,4 +121,86 @@ export class Schema {
             });
         });
     }
+
+    /**
+     * Alter table via model
+     * 
+     * @param {Model} model
+     */
+    alterTable(model) {
+        return new Promise(async (resolve, reject) => {
+            // Add default timestamps
+            const fields = {
+                ...model.getModelFields(),
+                created_at: 'string',
+                updated_at: 'string',
+                deleted_at: 'string'
+            };
+
+            let sqlFieldFormat = '';
+
+            // Format to SQL field
+            Object.keys(fields).forEach((fieldVal, fieldIndex) => {
+                sqlFieldFormat += `${ fieldVal } ${toSqlField(fields[fieldVal])}`
+                    + ( 
+                        fieldIndex === Object.keys(fields).length - 1
+                            ? ''
+                            : ', '
+                    );
+            });
+
+            try {
+
+                await (_databaseInstance.get(this)).executeSql('PRAGMA foreign_keys=off;');
+
+                await (_databaseInstance.get(this)).transaction(async (tx) => {
+                    try {
+
+                        const newTable = 'temp'+ model.getModelName();
+                        const table = model.getModelName();
+
+                        // Create table
+                        await tx.executeSql(`CREATE TABLE IF NOT EXISTS ${newTable}(${sqlFieldFormat});`
+                        );
+                        
+                        await tx.executeSql(`INSERT INTO ${newTable}(${fields}) SELECT ${fields} FROM ${table};`
+                        );
+
+                        await tx.executeSql(`DROP TABLE ${table};`);
+
+                        await tx.executeSql(`ALTER TABLE ${newTable} RENAME TO ${table};`);
+
+                        await tx.executeSql('COMMIT;');
+
+                    } catch (err) {
+                        console.log('Table alter error:', err);
+
+                        return reject({
+                            statusCode: 500,
+                            message: 'Table alteration error.'
+                        });
+                    }
+                });
+
+                await (_databaseInstance.get(this)).executeSql('PRAGMA foreign_keys=on;');
+            } catch (err) {
+                console.log('Database transaction error (alterTable):', err);
+
+                return reject({
+                    statusCode: 500,
+                    message: 'An error occurred.'
+                });
+            }
+
+
+            return resolve({
+                statusCode: 200,
+                message: 'Table successfully altered',
+                data: {
+                    modelName: model.getModelName(),
+                    fields
+                }
+            });
+        });
+    }
 }
