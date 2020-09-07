@@ -158,12 +158,13 @@ export class Schema {
 
                         const newTable = 'temp'+ model.getModelName();
                         const table = model.getModelName();
+                        const columnList = Object.keys(fields).join();
 
                         // Create table
                         await tx.executeSql(`CREATE TABLE IF NOT EXISTS ${newTable}(${sqlFieldFormat});`
                         );
                         
-                        await tx.executeSql(`INSERT INTO ${newTable}(${fields}) SELECT ${fields} FROM ${table};`
+                        await tx.executeSql(`INSERT INTO ${newTable}(${columnList}) SELECT ${columnList} FROM ${table};`
                         );
 
                         await tx.executeSql(`DROP TABLE ${table};`);
