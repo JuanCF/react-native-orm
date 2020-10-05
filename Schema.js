@@ -129,7 +129,7 @@ export class Schema {
      * @param {Model} model
      */
     alterTable(model) {
-        return new Promise(async (resolve, reject) => {
+        const alterFn = async () => {
             // Add default timestamps
             const fields = {
                 ...model.getModelFields(),
@@ -180,24 +180,22 @@ export class Schema {
                 });
 
                 await (_databaseInstance.get(this)).executeSql('PRAGMA foreign_keys=on;');
+
+                return {
+                    statusCode: 200,
+                    message: 'Table successfully altered',
+                    data: {
+                        modelName: model.getModelName(),
+                        fields
+                    }
+                };
             } catch (err) {
-                console.log('Database transaction error (alterTable):', err);
-
-                return reject({
+                throw {
                     statusCode: 500,
-                    message: 'An error occurred.'
-                });
+                    message: err.message
+                };
             }
-
-
-            return resolve({
-                statusCode: 200,
-                message: 'Table successfully altered',
-                data: {
-                    modelName: model.getModelName(),
-                    fields
-                }
-            });
-        });
+        };
+        return alterFn();
     }
 }
