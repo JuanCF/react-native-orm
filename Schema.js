@@ -93,6 +93,7 @@ export class Schema {
                             + model.getModelName()
                             + '(' + sqlFieldFormat + ');'
                         );
+
                     } catch (err) {
                         console.log('Table creation error:', err);
 
@@ -153,34 +154,29 @@ export class Schema {
 
                 await (_databaseInstance.get(this)).executeSql('PRAGMA foreign_keys=off;');
 
-                await (_databaseInstance.get(this)).transaction(async (tx) => {
-                    try {
+                const tableInfo =  await await (_databaseInstance.get(this)).executeSql(`SELECT name FROM pragma_table_info('${model.getModelName()}');`);
 
+                const infoColumns = tableInfo[0];
+
+                const oldFields = [];
+                for (var x = 0; x < infoColumns.rows.length; x++) {
+                    oldFields.push(infoColumns.rows.item(x).name);
+                }
+
+                const doAlteration = await new Promise((resolve, reject)=>{
+                    (_databaseInstance.get(this)).transaction((tx)=>{
                         const newTable = 'temp'+ model.getModelName();
                         const table = model.getModelName();
-                        const columnList = Object.keys(fields).join();
-
-                        // Create table
-                        await tx.executeSql(`CREATE TABLE IF NOT EXISTS ${newTable}(${sqlFieldFormat});`
-                        );
-                        
-                        await tx.executeSql(`INSERT INTO ${newTable}(${columnList}) SELECT ${columnList} FROM ${table};`
-                        );
-
-                        await tx.executeSql(`DROP TABLE ${table};`);
-
-                        await tx.executeSql(`ALTER TABLE ${newTable} RENAME TO ${table};`);
-
-                        await tx.executeSql('COMMIT;');
-
-                    } catch (err) {
-                        console.log('Table alter error:', err);
-
-                        return reject({
-                            statusCode: 500,
-                            message: 'Table alteration error.'
-                        });
-                    }
+                        const columnList = oldFields.join();
+                        tx.executeSql(`CREATE TABLE IF NOT EXISTS ${newTable}(${sqlFieldFormat});`);
+                        tx.executeSql(`INSERT INTO ${newTable}(${columnList}) SELECT ${columnList} FROM ${table};`);
+                        tx.executeSql(`DROP TABLE ${table};`);
+                        tx.executeSql(`ALTER TABLE ${newTable} RENAME TO ${table};`);
+                    },(error)=>{
+                        reject(error);
+                    },(result)=>{
+                        resolve(result);
+                    });
                 });
 
                 await (_databaseInstance.get(this)).executeSql('PRAGMA foreign_keys=on;');
